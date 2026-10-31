@@ -1,0 +1,8 @@
+numpy>=1.24,<3
+pylibiio==0.25
+pyadi-iio==0.0.21
+PyYAML>=6.0,<7
+Brotli>=1.1,<2
+zstandard>=0.22,<1
+cryptography>=43,<46
+pytest>=8.0,<9
