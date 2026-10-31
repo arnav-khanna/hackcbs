@@ -19,22 +19,16 @@ def load_jsonl(path: str | Path) -> Iterator[dict]:
             try:
                 record = json.loads(line)
             except json.JSONDecodeError as exc:
-                raise ValueError(
-                    f"Invalid JSON at line {line_number}: {exc}"
-                ) from exc
+                raise ValueError(f"Invalid JSON at line {line_number}: {exc}") from exc
 
             text = record.get("text")
             embedding = record.get("embedding")
 
             if not isinstance(text, str) or not text.strip():
-                raise ValueError(
-                    f"Missing text at line {line_number}"
-                )
+                raise ValueError(f"Missing text at line {line_number}")
 
             if not isinstance(embedding, list):
-                raise ValueError(
-                    f"Missing embedding at line {line_number}"
-                )
+                raise ValueError(f"Missing embedding at line {line_number}")
 
             if len(embedding) != VECTOR_DIMENSION:
                 raise ValueError(
@@ -48,9 +42,7 @@ def load_jsonl(path: str | Path) -> Iterator[dict]:
                 and __import__("math").isfinite(value)
                 for value in embedding
             ):
-                raise ValueError(
-                    f"Invalid embedding values at line {line_number}"
-                )
+                raise ValueError(f"Invalid embedding values at line {line_number}")
 
             yield {
                 "row_id": record.get("row_id", line_number - 1),

@@ -12,7 +12,7 @@ ROW_NAMESPACE = uuid.UUID("3f1dca1a-3bd1-4c74-b91d-3b9bff3e7f21")
 
 def ingest_jsonl(
     jsonl_path: str | Path | None = None,
-    batch_size: int = 100,
+    batch_size: int = 00,
 ) -> dict:
     if batch_size < 1:
         raise ValueError("batch_size must be at least 1")
