@@ -1,12 +1,8 @@
-from fastapi import APIRouter 
-
+from fastapi import APIRouter
 
 router = APIRouter()
 
 
-
-@router.get('/')
+@router.get("/")
 async def home():
-    return {
-        'message':'Hello World !'
-    }
+    return {"message": "Hello World !"}
