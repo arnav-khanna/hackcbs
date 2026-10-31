@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Pluto JSON Console</title>
+<style>
+:root{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:#18283c;background:#f3f6fa;font-size:15px}*{box-sizing:border-box}body{margin:0}header{background:#152c47;color:white;padding:25px 30px}header h1{font-size:24px;margin:0 0 7px}header p{margin:0;color:#c2d0df;font-size:14px}main{max-width:1300px;margin:0 auto;padding:22px}.bar{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-bottom:20px}.pill{background:#fff;border:1px solid #d9e1eb;border-radius:20px;padding:8px 13px;font-size:13px}.dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:#8592a0;margin-right:7px}.good{background:#178661}.bad{background:#c04141}.grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:20px}.card{background:white;border:1px solid #d9e1eb;border-radius:12px;overflow:hidden;box-shadow:0 4px 16px #23374e05}.card-head{padding:19px 21px;border-bottom:1px solid #e6ebf1;display:flex;align-items:center;justify-content:space-between;gap:10px}.card-head h2{font-size:17px;margin:0}.inside{padding:20px}.hint{color:#62738a;font-size:13px;line-height:1.5;margin:0 0 13px}textarea{width:100%;min-height:300px;resize:vertical;border:1px solid #c8d3e0;border-radius:8px;padding:16px;background:#fbfcfe;font:14px/1.65 ui-monospace,SFMono-Regular,Menlo,monospace;color:#132a43;tab-size:2}textarea:focus{outline:2px solid #8ac0fa;outline-offset:1px}button{cursor:pointer;border:1px solid #ccd7e4;border-radius:7px;background:white;color:#294057;padding:9px 14px;font:inherit;font-size:13px}button.primary{background:#1769c2;color:white;border-color:#1769c2;font-weight:600;padding:11px 20px}button:disabled{opacity:.5;cursor:default}.actions{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:13px}.result{white-space:pre-wrap;font:13px/1.55 ui-monospace,SFMono-Regular,Menlo,monospace;color:#425970;margin-top:16px;min-height:45px}.error{color:#ae2d2d}.success{color:#126647}.receive-list{height:425px;overflow:auto;padding:0 20px 20px}.empty{padding:42px 10px;text-align:center;color:#7b8ba0;font-size:14px}.message{border:1px solid #dde5ee;border-radius:8px;margin-top:16px;padding:13px}.meta{font-size:11px;line-height:1.5;color:#697c93;margin-bottom:8px;overflow-wrap:anywhere}.message pre{margin:0;white-space:pre-wrap;overflow-wrap:anywhere;font:13px/1.6 ui-monospace,SFMono-Regular,Menlo,monospace}.receive-note{margin:0;padding:13px 20px;color:#62738a;font-size:12px;line-height:1.5}footer{color:#728297;font-size:12px;padding:18px 1px;line-height:1.7}a{color:#1769c2}.count{font-size:12px;font-weight:400;color:#74869a;margin-left:7px}@media(max-width:780px){.grid{grid-template-columns:1fr}header{padding:20px}main{padding:16px}textarea{min-height:245px}.receive-list{height:360px}}
+</style>
+</head>
+<body>
+<header><h1 id="title">Pluto JSON Console</h1><p id="subtitle">Connecting to the radio transport…</p></header>
+<main>
+<div class="bar"><span class="pill"><span class="dot" id="radio-dot"></span><span id="radio-state">Checking radio</span></span><span class="pill"><span class="dot" id="receive-dot"></span><span id="receive-state">Starting receiver</span></span><span class="pill" id="features">Reading configuration…</span></div>
+<div class="grid">
+<section class="card"><div class="card-head"><h2>Send JSON</h2><span id="destination" class="hint" style="margin:0"></span></div><div class="inside"><p class="hint">Edit the whole JSON object below. Nested objects and arrays inside it are supported. Sending keeps the receiver running.</p><label for="json" class="hint">Your JSON object</label><textarea id="json" spellcheck="false" aria-label="JSON object to send">{
+  "text": "Hello",
+  "sensor": {
+    "temperature": 23.4
+  },
+  "values": [1, 2, 3]
+}</textarea><div class="actions"><button id="format" type="button">Format JSON</button><button id="send" class="primary" type="button">Send to other Pluto</button></div><div class="result" id="send-result" role="status" aria-live="polite">Ready for your JSON.</div></div></section>
+<section class="card"><div class="card-head"><h2>Live received JSON <span class="count" id="count">0 messages</span></h2><button id="clear" type="button">Clear view</button></div><p class="receive-note">Listening continuously while this page is open. New messages appear automatically; you can send at the same time.</p><div class="receive-list" id="received" aria-live="polite"><div class="empty" id="empty">Waiting for a message from the other Pluto…</div></div></section>
+</div>
+<footer>Transport algorithms are set in <code>configs/transport.yaml</code>; restart both endpoints after changing them. <a href="/docs" target="_blank" rel="noopener">API documentation</a> · <a href="/health" target="_blank" rel="noopener">Radio status</a><br>Use one receive consumer per Pluto. This live view consumes the same inbox as the API; another receive view or API consumer will divide the messages.</footer>
+</main>
+<script>
+const byId=id=>document.getElementById(id);
+let active=true, receivedCount=0, sending=false;
+function indicator(prefix,text,good){byId(prefix+'-state').textContent=text;byId(prefix+'-dot').className='dot '+(good?'good':'bad');}
+function parseEditor(){const obj=JSON.parse(byId('json').value);if(obj===null||Array.isArray(obj)||typeof obj!=='object')throw new Error('Enter a JSON object, for example {"text":"hello"}.');return obj;}
+function result(text,state=''){byId('send-result').textContent=text;byId('send-result').className='result '+state;}
+byId('format').onclick=()=>{try{byId('json').value=JSON.stringify(parseEditor(),null,2);result('JSON is valid. Ready to send.');}catch(error){result('Invalid JSON: '+error.message,'error');}};
+byId('send').onclick=async()=>{
+  if(sending)return;
+  let obj;try{obj=parseEditor();}catch(error){result('Invalid JSON: '+error.message,'error');return;}
+  sending=true;byId('send').disabled=true;result('Sending… waiting for delivery confirmation.');
+  try{
+    const response=await fetch('/send',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(obj)});
+    const data=await response.json();
+    if(!response.ok)throw new Error(data.detail||'Send failed (HTTP '+response.status+').');
+    const label=data.status==='delivered'?'Delivered — receiver confirmed.':'Submitted — delivery confirmation is disabled.';
+    result(label+'\n'+data.transport_latency_ms+' ms · '+data.fragments+' fragment(s) · '+data.retransmitted_fragments+' retransmitted\nMessage '+data.message_id,'success');
+  }catch(error){result('Send error: '+error.message,'error');}
+  finally{sending=false;byId('send').disabled=false;}
+};
+function addMessage(message){
+  byId('empty')?.remove();receivedCount++;
+  const entry=document.createElement('article');entry.className='message';
+  const meta=document.createElement('div');meta.className='meta';
+  const timestamp=new Date(message.received_at_unix*1000).toLocaleTimeString();
+  meta.textContent=timestamp+' · from Pluto '+message.source+' · '+message.message_id;
+  const pre=document.createElement('pre');pre.textContent=JSON.stringify(message.json,null,2);
+  entry.append(meta,pre);byId('received').prepend(entry);
+  while(byId('received').children.length>100)byId('received').lastElementChild.remove();
+  byId('count').textContent=receivedCount+' message'+(receivedCount===1?'':'s');
+}
+byId('clear').onclick=()=>{byId('received').replaceChildren();receivedCount=0;byId('count').textContent='0 messages';};
+const delay=ms=>new Promise(resolve=>setTimeout(resolve,ms));
+async function receiveLoop(){
+  while(active){
+    try{
+      indicator('receive','Listening continuously',true);
+      const response=await fetch('/receive?timeout_ms=15000',{cache:'no-store'});
+      if(response.status===204)continue;
+      if(!response.ok)throw new Error('Receiver HTTP '+response.status);
+      addMessage(await response.json());
+    }catch(error){indicator('receive','Disconnected — reconnecting…',false);await delay(1500);}
+  }
+}
+async function healthLoop(){
+  while(active){
+    try{
+      const response=await fetch('/health',{cache:'no-store'}),data=await response.json();
+      if(!response.ok||!data.running)throw new Error(data.stats?.last_error||'Radio stopped');
+      const number=data.node_id,folder=number===1?'oka_':'oka';
+      byId('title').textContent='Pluto '+number+' · '+folder;
+      document.title='Pluto '+number+' | Live JSON';
+      byId('subtitle').textContent=data.mode+' · '+data.backend+' transport · node '+number+' ↔ node '+data.peer_id;
+      byId('destination').textContent='To Pluto '+data.peer_id;
+      byId('features').textContent='Compression: '+data.compression+' · Encryption: '+data.encryption+' · Signing: '+data.signing;
+      indicator('radio','Radio connected',true);
+    }catch(error){indicator('radio','Radio unavailable: '+error.message,false);}
+    await delay(3000);
+  }
+}
+window.addEventListener('pagehide',()=>{active=false;});
+receiveLoop();healthLoop();
+</script>
+</body>
+</html>

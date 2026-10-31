@@ -1,0 +1,15 @@
+.DS_Store
+.venv/
+.pytest_cache/
+__pycache__/
+*.py[cod]
+work/
+captures/
+*.iq
+*.key
+configs/pluto.local.yaml
+configs/pluto.example.yaml
+
+# Optional JSON transport local overrides and shared secrets
+configs/transport.local.yaml
+*.aes-key

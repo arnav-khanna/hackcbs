@@ -1,0 +1,6 @@
+{
+  "values": {
+    "receiver_id": {"mac-a": 1, "mac-b": 2},
+    "source_id": {"mac-a": 1, "mac-b": 2}
+  }
+}

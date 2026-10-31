@@ -1,0 +1,86 @@
+# Same transport code and YAML on both computers. Choose the role with --mode.
+# Secure profile reusing the existing X25519, AES-GCM and Ed25519 identities.
+backend: radio  # radio or simulation; --simulate overrides this
+compression:
+  algorithm: none  # none, brotli, zstd, lz4
+  level: 1
+  min_bytes: 256
+  skip_if_larger: true
+
+encryption:
+  algorithm: aes256  # none or aes256 (AES-256-GCM)
+  key_env: PLUTO_AES_KEY  # Base64 32-byte shared key, only if AES is on and KEX is disabled
+  key_file: null  # Optional file instead of environment variable
+
+key_exchange:
+  algorithm: x25519  # disabled or x25519; reuses the existing node identity file
+session:
+  enabled: false  # Optional HELLO/ACK and per-session HKDF salt; host initiates
+  timeout_ms: 1000
+  retries: 3
+key_distribution:
+  enabled: false  # Optional exchange of public keys, checked against pinned peer keys
+signing:
+  algorithm: ed25519  # none or ed25519; existing identity keys
+
+reliability:
+  enabled: true  # false returns submitted; true waits for verified reassembly ACK
+  window_size: 4  # 1..32; batch fragments and resend only missing ones
+  ack_timeout_ms: 80
+  max_retries: 4
+limits:
+  packet_bytes: 512
+  max_message_bytes: 8388608
+  max_pending_messages: 32
+  max_buffer_bytes: 16777216
+  reassembly_timeout_s: 30
+  receive_queue: 128
+  dedup_entries: 4096
+  dedup_ttl_s: 120
+
+api:
+  bind: 127.0.0.1
+simulation:
+  host: 127.0.0.1
+  loss_rate: 0.0
+  duplicate_rate: 0.0
+  delay_ms: 0.0
+  jitter_ms: 0.0  # Different per-packet delays also simulate reordering
+  seed: 1234
+
+radio:
+  sample_rate_hz: 2000000
+  center_frequency_hz: 866500000
+  rf_bandwidth_hz: 1000000
+  tx_gain_db: -15
+  rx_gain_db: 30
+  rx_buffer_size: 4096
+  samples_per_symbol: 8  # 250 kbit/s raw; use 16 or 32 for a slower waveform
+  tone_deviation_hz: 125000
+  preamble_hex: '5555555555555555d391ac6f'
+  tx_guard_ms: 1
+  interframe_gap_ms: 1
+  rx_kernel_buffers: 2
+  tx_kernel_buffers: 4
+  burst_copies: 1
+  tail_padding_ms: 1
+
+modes:
+  host:
+    node_id: 1
+    peer_id: 2
+    api_port: 8000
+    simulation_port: 19001
+    peer_simulation_port: 19002
+    uri: ip:172.31.241.1
+    usb_serial: '104473e6a60f000208002c00e217167b6a'  # null uses uri instead
+    identity_file: configs/pluto.example.yaml
+  server:
+    node_id: 2
+    peer_id: 1
+    api_port: 8001
+    simulation_port: 19002
+    peer_simulation_port: 19001
+    uri: ip:172.31.242.1
+    usb_serial: null  # Pluto 2 has a working IP link on this setup
+    identity_file: configs/pluto.example.yaml

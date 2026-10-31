@@ -1,0 +1,38 @@
+device:
+  uri: ip:192.168.2.1
+  center_frequency_hz: 866500000
+  sample_rate_hz: 2000000
+  rf_bandwidth_hz: 1000000
+  tx_gain_db: -15
+  rx_gain_db: 30
+  rx_buffer_size: 4096
+
+phy:
+  preamble_hex: "5555555555555555d391ac6f"
+  samples_per_symbol: 16
+  compatibility_samples_per_symbol: []
+  tone_deviation_hz: 125000
+  max_payload_bytes: 512
+  initial_burst_copies: 2
+  ack_burst_copies: 2
+  ack_followup_count: 3
+  ack_followup_gap_seconds: 0.006
+  max_preamble_bit_errors: 4
+  capture_seconds: 0.025
+  rx_overlap_seconds: 0.04
+  max_resends: 4
+  ack_wait_seconds: 0.18
+
+link:
+  local_address: mac-a
+  default_receiver_address: mac-b
+  metadata_dictionary: metadata_dictionary.json
+
+security:
+  encryption_method: x25519-aesgcm
+  private_key: "REPLACE_WITH_LOCAL_X25519_PRIVATE_KEY"
+  peer_public_keys:
+    mac-b: "REPLACE_WITH_MAC_B_X25519_PUBLIC_KEY"
+  signing_private_key: "REPLACE_WITH_LOCAL_ED25519_PRIVATE_KEY"
+  peer_signing_public_keys:
+    mac-b: "REPLACE_WITH_MAC_B_ED25519_PUBLIC_KEY"
