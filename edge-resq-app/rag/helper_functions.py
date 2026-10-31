@@ -2,7 +2,7 @@ import json
 from pathlib import Path
 from typing import Iterator
 
-from config import VECTOR_DIMENSION
+from app.config import VECTOR_DIMENSION
 
 
 def load_jsonl(path: str | Path) -> Iterator[dict]:
