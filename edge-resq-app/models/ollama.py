@@ -1,6 +1,6 @@
 import httpx
 
-from app.config import CHAT_MODEL, OLLAMA_BASE_URL
+from config import CHAT_MODEL, OLLAMA_BASE_URL
 
 
 def generate_response(prompt: str) -> str:
