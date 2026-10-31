@@ -1,7 +1,9 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from routes.home import router as home_router
-from logs.middleware_logs import log_requests
+
+from app.routes.home import router as home_router
+from app.logs.middleware_logs import log_requests
+
 import uvicorn as uv
 
 app = FastAPI()
@@ -23,4 +25,4 @@ app.include_router(home_router)
 
 
 if __name__ == "__main__":
-    uv.run("main:app", port=8000, reload=True)
+    uv.run("main:edge-resq-app", port=8000, reload=True)

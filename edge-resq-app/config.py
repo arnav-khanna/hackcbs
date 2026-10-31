@@ -14,4 +14,4 @@ CHUNK_SIZE = int(os.getenv("CHUNK_SIZE", "800"))
 CHUNK_OVERLAP = int(os.getenv("CHUNK_OVERLAP", "120"))
 TOP_K = int(os.getenv("TOP_K", "5"))
 VECTOR_DIMENSION = 768
-DOCUMENTS_DIR = os.getenv("DOCUMENTS_DIR", "/app/documents")
+#DOCUMENTS_DIR = os.getenv("DOCUMENTS_DIR", "/app/documents")
