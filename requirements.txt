@@ -1,2 +1,8 @@
 fastapi
-uvicorn
+uvicorn[standard]
+psycopg[binary]
+httpx
+python-dotenv
+pypdf
+python-multipart
+
