@@ -7,10 +7,9 @@ services:
       - bin/yugabyted
       - start
       - --daemon=false
-      - --base_dir=/home/yugabyte/yb_data
     ports:
       - "5433:5433"
-      - "7000:7000"
+      - "7001:7000"
     volumes:
       - yugabyte_data:/home/yugabyte/yb_data
     healthcheck:
