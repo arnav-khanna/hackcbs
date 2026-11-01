@@ -6,3 +6,6 @@
 .pytest_cache
 .venv
 venv
+**/.runtime
+**/.venv
+**/.pytest_cache

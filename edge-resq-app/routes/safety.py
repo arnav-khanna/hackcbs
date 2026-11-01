@@ -1,6 +1,6 @@
 """HTTP access to the MCP safety tools, combined with SOS classification.
 
-POST /safety/assess          SOS text + location -> classification + calm safety plan
+POST /safety/assess          SOS text (+ optional location) -> assessment + guidance
 POST /safety/places          nearest safe places
 POST /safety/hazards         earthquakes / rain / wind nearby
 POST /safety/geocode         place name -> coordinates
@@ -54,10 +54,7 @@ class AssessRequest(BaseModel):
         return v
 
     @model_validator(mode="after")
-    def _needs_location(self):
-        has_gps = self.latitude is not None and self.longitude is not None
-        if not has_gps and not (self.place_name and self.place_name.strip()):
-            raise ValueError("Provide latitude+longitude, or place_name.")
+    def _coordinate_pair(self):
         if (self.latitude is None) != (self.longitude is None):
             raise ValueError("latitude and longitude must be given together.")
         return self
@@ -96,7 +93,7 @@ async def assess(body: AssessRequest) -> dict[str, Any]:
     if body.latitude is not None and body.longitude is not None:
         lat, lon = body.latitude, body.longitude
         location = {"latitude": lat, "longitude": lon, "source": "gps", "resolved_name": None}
-    else:
+    elif body.place_name and body.place_name.strip():
         geo = await geocode_place(body.place_name.strip())
         if not geo.get("ok"):
             raise HTTPException(status_code=422, detail=geo.get("error", "Could not find that place."))
@@ -104,6 +101,8 @@ async def assess(body: AssessRequest) -> dict[str, Any]:
         lat, lon = top["latitude"], top["longitude"]
         location = {"latitude": lat, "longitude": lon, "source": "geocoded",
                     "resolved_name": top["name"]}
+    else:
+        location = None
 
     # 2. Classification. If the RAG stack (DB / Ollama) is down, fall back to keyword rules
     #    so the person still gets a plan. The fallback is flagged in the response.
@@ -127,16 +126,23 @@ async def assess(body: AssessRequest) -> dict[str, Any]:
         dtype = classification.incident_type if classification.incident_type in DISASTER_PROFILES else "general"
 
     # 4. Safety plan from the MCP tools.
-    plan = await calm_safety_plan(lat, lon, dtype, body.country_code)
-    _tool_or_http_error(plan)
+    plan = None
+    if location is not None:
+        plan = await calm_safety_plan(lat, lon, dtype, body.country_code)
+        _tool_or_http_error(plan)
 
     # 5. One ordered list for the UI: breathing cue + call prompt, the classifier's headline,
     #    then the place to go and the disaster-specific steps.
-    steps = list(plan["steps"])
     guidance = classification.emergency_guidance
-    insert_at = min(2, len(steps))
-    if guidance and guidance.headline:
-        steps.insert(insert_at, guidance.headline)
+    if plan is not None:
+        steps = list(plan["steps"])
+        if guidance and guidance.headline:
+            steps.insert(min(2, len(steps)), guidance.headline)
+    else:
+        # A text-only assessment can provide local guidance without inventing
+        # coordinates or calling nearby-resource services for the wrong place.
+        steps = ([guidance.headline, *guidance.do_now, *guidance.next_steps]
+                 if guidance else [])
 
     return {
         "location": location,
@@ -147,6 +153,11 @@ async def assess(body: AssessRequest) -> dict[str, Any]:
         "alert": classification.alert,
         "calm_steps": steps,
         "safety_plan": plan,
+        "location_required": location is None,
+        "location_prompt": (
+            "For nearby resources, include a line like 'Location: your town or coordinates' in your incident message."
+            if location is None else None
+        ),
     }
 
 

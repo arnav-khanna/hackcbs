@@ -4,6 +4,8 @@ This adds `json_transport/` and `run.py` alongside the original `pluto_json_radi
 
 ## Start
 
+For one-command setup on the two Macs, run `./start.sh host` on the ground Mac and `./start.sh server` on the peer Mac from the repository root. See [STARTUP.md](../STARTUP.md). It bootstraps the existing requirements and native driver when missing; the following manual commands are still supported.
+
 On computer/Pluto 1 (`oka_`):
 
 ```sh
@@ -26,7 +28,9 @@ The existing native libiio runtime is still required for hardware. Simulation do
 
 ## FastAPI
 
-For everyday use, open `http://127.0.0.1:8000/` (Pluto 1) and `http://127.0.0.1:8001/` (Pluto 2). Each console has a full JSON editor and a live receive view. Reception continues while the page is open, including during sends. JSON syntax is validated before transmission. Delivery ACKs, retransmissions, API errors and radio connection state are shown directly. The live view uses long polling, consumes the same inbox as `/receive`, and shows the most recent 100 messages; use one receive consumer per node. Closing/reloading a page cancels its pending receive read. The view is not a durable message archive.
+Open the API URL printed at startup for the EDGE-RESQ mobile operator dashboard. Its incident form, chat, received guidance and transport telemetry use only this local Pluto API. See [FRONTEND.md](FRONTEND.md) for setup, payload mapping and tower bridge contract and capability limits. Ports follow `configs/transport.yaml` (this checkout uses 12000/12001; code defaults are 8000/8001).
+
+The original full JSON editor and live receive console remain at `/console`. Reception continues during sends. JSON syntax, ACKs, retransmissions, API errors and radio state are shown directly. Both views consume the same `/receive` inbox and retain at most 100 entries; use one receive consumer per node. Pause host dashboard receiving before opening its console. On the tower, the server bridge owns the inbox; use server --radio-only for receive-console diagnostics. Closing/reloading cancels the pending receive read. Neither view is a durable archive.
 
 Open `http://127.0.0.1:8000/docs` on the host or `http://127.0.0.1:8001/docs` on the server.
 

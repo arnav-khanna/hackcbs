@@ -6,6 +6,7 @@ from pathlib import Path
 import orjson
 from fastapi import FastAPI, HTTPException, Query, Request, Response
 from fastapi.responses import FileResponse, JSONResponse
+from fastapi.staticfiles import StaticFiles
 
 from .engine import Transport
 from .links import SimulationLink
@@ -33,8 +34,14 @@ def create_app(config, link=None):
             await transport.close()
 
     app = FastAPI(title='Pluto JSON Transport', version='1.0.0', lifespan=lifespan)
+    frontend = Path(__file__).with_name('frontend')
+    app.mount('/operator-assets', StaticFiles(directory=frontend), name='operator-assets')
 
     @app.get('/', include_in_schema=False)
+    async def operator():
+        return FileResponse(frontend / 'index.html', headers={'Cache-Control': 'no-store'})
+
+    @app.get('/console', include_in_schema=False)
     async def console():
         return FileResponse(Path(__file__).with_name('console.html'), headers={'Cache-Control': 'no-store'})
 

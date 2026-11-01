@@ -1,3 +1,6 @@
 .ENV
 __pycache__/
 .log 
+
+# Local server configuration
+/.env

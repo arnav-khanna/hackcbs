@@ -343,7 +343,14 @@ def test_console_and_continuous_receive_while_sending():
             async with httpx.AsyncClient(transport=httpx.ASGITransport(app=app_a),base_url='http://host') as host,httpx.AsyncClient(transport=httpx.ASGITransport(app=app_b),base_url='http://server') as server:
                 page=await host.get('/')
                 assert page.status_code==200 and 'text/html' in page.headers['content-type']
-                assert 'Live received JSON' in page.text and 'JSON.parse' in page.text
+                assert 'EDGE-RESQ' in page.text and 'message-form' in page.text
+                assert 'incident-form' not in page.text
+                console=await host.get('/console')
+                assert 'Live received JSON' in console.text and 'JSON.parse' in console.text
+                for asset in ('styles.css', 'app.mjs', 'api.mjs', 'data.mjs', 'config.mjs'):
+                    response=await host.get('/operator-assets/'+asset)
+                    assert response.status_code==200
+                assert (await host.get('/operator-assets/../api.py')).status_code==404
                 for index in range(3):
                     listening=asyncio.create_task(server.get('/receive?timeout_ms=5000'))
                     await asyncio.sleep(0)

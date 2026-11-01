@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#0c121b">
+  <title>EDGE-RESQ · Field assistant</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%23ef7067'/%3E%3Cpath d='M13 7h6v6h6v6h-6v6h-6v-6H7v-6h6z' fill='%230c121b'/%3E%3C/svg%3E">
+  <link rel="stylesheet" href="/operator-assets/styles.css">
+  <script type="module" src="/operator-assets/app.mjs"></script>
+</head>
+<body>
+  <div class="app">
+    <header><a class="brand" href="/" aria-label="EDGE-RESQ home"><span class="brand-mark" aria-hidden="true">✚</span><span>EDGE-RESQ<small>FIELD ASSISTANT</small></span></a><span class="connection" role="status"><span id="connection-dot" class="dot"></span><span id="connection-state">Connecting…</span></span></header>
+    <div id="connection-error" class="notice error" role="status" hidden></div>
+    <div id="receiver-error" class="notice" role="status" hidden></div>
+    <div id="server-note" class="notice" hidden>Tower endpoint is running. Send messages from the host computer; the server bridge handles this inbox.</div>
+    <noscript><p class="notice error">Enable JavaScript to send and receive messages.</p></noscript>
+    <main>
+      <section id="messages" class="messages" role="log" aria-label="Conversation" aria-live="polite" aria-relevant="additions">
+        <div id="welcome" class="welcome"><span class="welcome-mark" aria-hidden="true">✚</span><p class="eyebrow">GROUND SUPPORT, OVER RADIO</p><h1>Describe the situation.</h1><p>Tell us what is happening and what help you need.<br>Your message goes to the tower for a safety assessment.</p><span class="quiet-note">Responses appear here when they return.</span></div>
+      </section>
+    </main>
+    <form id="message-form" class="composer">
+      <label for="message-text">Your message</label>
+      <div class="input-box"><textarea id="message-text" name="text" rows="3" maxlength="2000" required placeholder="What is happening?" aria-describedby="message-help"></textarea><div class="composer-actions"><span id="character-count">0 / 2000</span><button id="send-message" type="submit" disabled>Send message <span aria-hidden="true">↗</span></button></div></div>
+      <div class="composer-note"><span id="message-help">Messages travel over the Pluto radio link.</span><span>EDGE-RESQ</span></div>
+    </form>
+  </div>
+</body>
+</html>
