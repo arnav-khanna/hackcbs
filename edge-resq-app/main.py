@@ -1,3 +1,4 @@
+import asyncio
 import logging
 from contextlib import asynccontextmanager
 
@@ -6,7 +7,9 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
 from app.models.database import close_db, init_db
+from app.models.ollama import warm_up
 from app.rag.errors import RagError
+from app.routes.classification import router as classification_router
 from app.routes.rag import router as rag_router
 
 import uvicorn as uv
@@ -22,7 +25,10 @@ async def lifespan(_: FastAPI):
         await init_db()
     except RagError as exc:
         logger.error("Database not ready at startup: %s", exc)
+    # Load the chat model in the background so the first SOS is not a cold start.
+    warm_task = asyncio.create_task(warm_up())
     yield
+    warm_task.cancel()
     await close_db()
 
 
@@ -46,6 +52,7 @@ async def rag_error_handler(_: Request, exc: RagError):
 
 
 app.include_router(rag_router)
+app.include_router(classification_router)
 
 
 if __name__ == "__main__":

@@ -98,8 +98,15 @@ async def ingest_pdf(filename: str, data: bytes) -> dict:
 async def ingest_jsonl(
     jsonl_path: str | Path | None = None,
     batch_size: int = 500,
+    dataset: str | None = None,
 ) -> dict:
-    """Load pre-computed embeddings (output of `python -m app.rag.embeddings`)."""
+    """Load pre-computed embeddings (output of `python -m app.rag.embeddings`).
+
+    Row ids come from the row number. Without `dataset` they are the legacy ids,
+    so a second file reuses ids 0..N and ON CONFLICT DO NOTHING silently skips its
+    rows. Pass a distinct `dataset` per file to avoid that. Changing it for a file
+    that was already loaded inserts the rows again instead of skipping them.
+    """
     if batch_size < 1:
         raise ValueError("batch_size must be at least 1")
 
@@ -120,12 +127,17 @@ async def ingest_jsonl(
 
     for record in load_jsonl(jsonl_path):
         # Stable ID for safe reruns of the same dataset.
-        document_id = str(uuid.uuid5(ROW_NAMESPACE, str(record["row_id"])))
+        key = str(record["row_id"]) if dataset is None else f"{dataset}:{record['row_id']}"
+        document_id = str(uuid.uuid5(ROW_NAMESPACE, key))
         batch.append(
             (
                 document_id,
                 record["content"],
-                {**record["metadata"], "row_id": record["row_id"]},
+                {
+                    **record["metadata"],
+                    "row_id": record["row_id"],
+                    **({"dataset": dataset} if dataset else {}),
+                },
                 record["embedding"],
             )
         )

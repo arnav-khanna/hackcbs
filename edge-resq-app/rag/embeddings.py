@@ -240,6 +240,7 @@ def main() -> int:
     mode = "a" if args.append else "w"
     total = len(texts)
     written = 0
+    skipped = 0
 
     print(f"Input rows: {total}")
     print(f"Embedding model: {args.model}")
@@ -261,8 +262,14 @@ def main() -> int:
                 vectors_by_position: dict[int, list[float]] = {}
 
                 if nonempty_texts:
+                    # Same document prefix as embed_documents(); queries use the
+                    # query prefix, so unprefixed document vectors rank worse.
                     vectors = asyncio.run(
-                        ollama_embed(nonempty_texts, args.ollama_url, args.model)
+                        ollama_embed(
+                            [EMBED_DOC_PREFIX + t for t in nonempty_texts],
+                            args.ollama_url,
+                            args.model,
+                        )
                     )
                     for position, vector in zip(nonempty_positions, vectors):
                         vectors_by_position[position] = vector
@@ -270,6 +277,11 @@ def main() -> int:
                 for local_index, text in enumerate(batch_texts):
                     row_index = start + local_index
                     row = df.iloc[row_index]
+                    if local_index not in vectors_by_position:
+                        # ingest_jsonl rejects records without text/embedding,
+                        # so one empty row would abort the whole load.
+                        skipped += 1
+                        continue
 
                     metadata = {}
                     for column in ["source", "topic", "chunk_id"]:
@@ -298,7 +310,7 @@ def main() -> int:
         print(f"ERROR: Embedding generation failed: {exc}", file=sys.stderr)
         return 1
 
-    print(f"Done. Wrote {written} records to {output_path}")
+    print(f"Done. Wrote {written} records to {output_path} ({skipped} empty rows skipped)")
     print("Insert them into YugabyteDB with app.rag.ingestion.ingest_jsonl().")
     return 0
 

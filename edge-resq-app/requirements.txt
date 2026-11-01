@@ -1,0 +1,23 @@
+# Web
+fastapi>=0.115
+uvicorn[standard]>=0.30
+python-multipart>=0.0.9      # required by the PDF upload route (UploadFile)
+pydantic>=2.7
+httpx>=0.27
+
+# LLM (LangChain + local Ollama)
+langchain-core>=0.3
+langchain-ollama>=0.3        # ChatOllama, structured output via JSON schema
+
+# Database (YugabyteDB / pgvector)
+psycopg[binary]>=3.2
+psycopg-pool>=3.2
+
+# PDF ingestion
+pypdf>=4.0
+
+# Only for `python -m app.rag.embeddings` (CSV -> JSONL)
+# pandas
+
+# Tests
+# pytest
