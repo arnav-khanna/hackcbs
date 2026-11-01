@@ -6,11 +6,13 @@ from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
+
 from app.models.database import close_db, init_db
 from app.models.ollama import warm_up
 from app.rag.errors import RagError
 from app.routes.classification import router as classification_router
 from app.routes.rag import router as rag_router
+from app.routes.safety import router as safety_router
 
 import uvicorn as uv
 
@@ -53,7 +55,7 @@ async def rag_error_handler(_: Request, exc: RagError):
 
 app.include_router(rag_router)
 app.include_router(classification_router)
-
+app.include_router(safety_router)
 
 if __name__ == "__main__":
     uv.run("app.main:app", port=8000, reload=True)

@@ -5,6 +5,7 @@ WORKDIR /edge-resq-app
 
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
+RUN pip install --no-cache-dir "mcp[cli]>=1.2,<2"
 
 COPY ./edge-resq-app/ ./app/
 
